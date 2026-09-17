@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data (du lieu lon, khong commit vao repo)
+data/raw/
+data/processed/
+*.csv
+!data/.gitkeep
+
+# Models da train
+*.pkl
+*.joblib
+*.h5
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Virtual environment
+venv/
+.venv/
+env/
+conda-env/
+
+# Output
+output/
+*.png
+*.html
+!docs/**
+
+# Logs
+*.log
+
+# Config local
+.env

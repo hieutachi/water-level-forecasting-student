@@ -1,0 +1,71 @@
+# =============================================================================
+# Cau hinh cho pipeline du bao muc nuoc Quang Ha
+# =============================================================================
+
+# Duong dan du lieu
+data:
+  raw_path: "data/raw/Dulieughep.csv"
+  processed_path: "data/processed/"
+  columns:
+    date: "Date Time"
+    river_flow_a: "Bien tren 1 (m3/s)"
+    river_flow_b: "Bien tren 2(m3/s)"
+    sea_level: "Bien duoi (m)"
+    water_level: "Ket qua HACOI 4985.68 (m)"
+
+# Cac moc thoi gian chia du lieu (temporal split)
+split:
+  train_end: "2017-12-31"
+  val_end: "2019-12-31"
+  # Test: tu 2020-01-01 den cuoi du lieu
+
+# Cac horizon du bao
+horizons: [1, 3, 7]
+
+# Nguong phan loai vung nguy hiem (tren tap train 28 nam)
+risk_thresholds:
+  warning: 1.06    # P95
+  exceedance: 1.24 # P99
+
+# Thong so feature engineering
+features:
+  lag_periods: [1, 2, 3, 5, 7, 10, 14, 21, 28, 30, 35, 42, 60]
+  rolling_windows: [3, 7, 14, 30]
+  rolling_stats: ["mean", "std", "min", "max"]
+  seasonal_encoding: true
+  tidal_cycle_period: 14.76  # Chu ky trieu chinh (ngay)
+
+# Thong so mo hinh
+models:
+  random_forest:
+    n_estimators: 500
+    max_depth: 20
+    min_samples_split: 5
+    random_state: 42
+    n_jobs: -1
+  xgboost:
+    n_estimators: 500
+    max_depth: 8
+    learning_rate: 0.05
+    subsample: 0.8
+    random_state: 42
+    n_jobs: -1
+  ridge:
+    alpha: 1.0
+    random_state: 42
+
+# Tham so danh gia
+evaluation:
+  metrics: ["mae", "rmse", "mape", "r2"]
+  walk_forward:
+    retrain_every_days: 28
+    gap: 7  # temporal gap de tranh data leakage
+
+# Noise experiment (Section IV-G cua paper)
+noise_experiment:
+  sigmas: [0.0, 0.01, 0.02, 0.05]
+  n_seeds: 3
+  scenarios: ["S1", "S2"]  # S1: train clean/test noisy; S2: train+test noisy
+
+# Seed cho reproducibility
+random_state: 42
