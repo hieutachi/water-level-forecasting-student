@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Water Level Forecasting — Hành trình từ DATN đến Paper VNICT2026</title>
+<style>
+/* ========== RESET & BASE ========== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --c-bg:#0a0e1a;--c-surface:#111827;--c-card:#1a2235;--c-border:#2a3a55;
+  --c-text:#e2e8f0;--c-muted:#94a3b8;--c-accent:#38bdf8;--c-accent2:#818cf8;
+  --c-green:#34d399;--c-amber:#fbbf24;--c-red:#f87171;--c-pink:#f472b6;
+  --c-orange:#fb923c;
+  --radius:16px;--shadow:0 4px 32px rgba(0,0,0,.4);
+  --font:'Segoe UI','Helvetica Neue',Arial,sans-serif;
+}
+html{scroll-behavior:smooth;font-size:16px}
+body{font-family:var(--font);background:var(--c-bg);color:var(--c-text);line-height:1.7;overflow-x:hidden}
+a{color:var(--c-accent);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ========== HERO ========== */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 20%,rgba(56,189,248,.12) 0%,transparent 60%),radial-gradient(ellipse at 70% 80%,rgba(129,140,248,.1) 0%,transparent 60%);pointer-events:none}
+.hero h1{font-size:clamp(2rem,5vw,3.6rem);font-weight:800;background:linear-gradient(135deg,var(--c-accent),var(--c-accent2),var(--c-pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:fadeUp .8s ease-out both}
+.hero .subtitle{font-size:clamp(1rem,2.5vw,1.35rem);color:var(--c-muted);margin-top:1rem;animation:fadeUp .8s ease-out .2s both}
+.hero .badge{display:inline-block;margin-top:2rem;padding:.5rem 1.5rem;border:1px solid var(--c-accent);border-radius:999px;font-size:.85rem;color:var(--c-accent);animation:fadeUp .8s ease-out .4s both}
+.scroll-hint{position:absolute;bottom:2rem;animation:bounce 2s infinite;font-size:1.5rem;color:var(--c-muted)}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideLeft{from{opacity:0;transform:translateX(-40px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideRight{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(56,189,248,.3)}50%{box-shadow:0 0 0 12px rgba(56,189,248,0)}}
+@keyframes glow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.2)}}
+@keyframes countUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ========== NAV ========== */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,14,26,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--c-border);padding:.8rem 2rem;display:flex;align-items:center;gap:1.5rem;justify-content:center}
+nav a{color:var(--c-muted);font-size:.85rem;font-weight:600;letter-spacing:.03em;padding:.4rem .8rem;border-radius:8px;transition:.25s}
+nav a:hover,nav a.active{color:var(--c-accent);background:rgba(56,189,248,.08);text-decoration:none}
+nav .logo{font-weight:800;font-size:1rem;color:var(--c-accent);margin-right:auto}
+
+/* ========== SECTION COMMON ========== */
+section{padding:5rem 2rem;max-width:1200px;margin:0 auto}
+.section-header{text-align:center;margin-bottom:3.5rem}
+.section-header h2{font-size:clamp(1.6rem,4vw,2.4rem);font-weight:800;margin-bottom:.5rem}
+.section-header p{color:var(--c-muted);max-width:600px;margin:0 auto;font-size:1rem}
+.level-badge{display:inline-block;padding:.35rem 1rem;border-radius:999px;font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1rem}
+
+/* ========== LEVEL SECTIONS ========== */
+.level{position:relative}
+.level::before{content:'';position:absolute;left:50%;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,transparent,var(--c-border),transparent);transform:translateX(-50%);z-index:0}
+
+/* Level 1 */
+.level-1 .level-badge{background:rgba(251,191,36,.15);color:var(--c-amber);border:1px solid rgba(251,191,36,.3)}
+.level-1 .section-header h2{color:var(--c-amber)}
+
+/* Level 2 */
+.level-2 .level-badge{background:rgba(56,189,248,.15);color:var(--c-accent);border:1px solid rgba(56,189,248,.3)}
+.level-2 .section-header h2{color:var(--c-accent)}
+
+/* Level 3 */
+.level-3 .level-badge{background:rgba(52,211,153,.15);color:var(--c-green);border:1px solid rgba(52,211,153,.3)}
+.level-3 .section-header h2{color:var(--c-green)}
+
+/* ========== TIMELINE ========== */
+.timeline{position:relative;z-index:1}
+.tl-item{display:grid;grid-template-columns:1fr 60px 1fr;gap:0;align-items:start;margin-bottom:2.5rem}
+.tl-item:nth-child(odd) .tl-content{grid-column:1;grid-row:1;text-align:right;padding-right:2rem}
+.tl-item:nth-child(odd) .tl-dot{grid-column:2;grid-row:1}
+.tl-item:nth-child(odd) .tl-empty{grid-column:3;grid-row:1}
+.tl-item:nth-child(even) .tl-empty{grid-column:1;grid-row:1}
+.tl-item:nth-child(even) .tl-dot{grid-column:2;grid-row:1}
+.tl-item:nth-child(even) .tl-content{grid-column:3;grid-row:1;text-align:left;padding-left:2rem}
+.tl-dot{display:flex;flex-direction:column;align-items:center}
+.tl-dot span{width:16px;height:16px;border-radius:50%;border:3px solid var(--c-accent);background:var(--c-bg);position:relative;z-index:2}
+.tl-content{opacity:0;transform:translateY(20px);transition:all .6s ease-out}
+.tl-content.visible{opacity:1;transform:translateY(0)}
+.tl-item:nth-child(odd) .tl-content.visible{animation:slideLeft .6s ease-out both}
+.tl-item:nth-child(even) .tl-content.visible{animation:slideRight .6s ease-out both}
+
+/* ========== CARDS ========== */
+.card{background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--radius);padding:1.5rem;position:relative;overflow:hidden;transition:transform .3s,box-shadow .3s}
+.card:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
+.card h3{font-size:1.1rem;font-weight:700;margin-bottom:.5rem}
+.card p{color:var(--c-muted);font-size:.9rem}
+.card .tag{display:inline-block;padding:.15rem .6rem;border-radius:6px;font-size:.7rem;font-weight:700;margin-right:.3rem;margin-bottom:.3rem}
+
+/* Tag colors */
+.tag-amber{background:rgba(251,191,36,.15);color:var(--c-amber)}
+.tag-blue{background:rgba(56,189,248,.15);color:var(--c-accent)}
+.tag-green{background:rgba(52,211,153,.15);color:var(--c-green)}
+.tag-red{background:rgba(248,113,113,.15);color:var(--c-red)}
+.tag-purple{background:rgba(129,140,248,.15);color:var(--c-accent2)}
+.tag-pink{background:rgba(244,114,182,.15);color:var(--c-pink)}
+
+/* ========== COMPARISON TABLE ========== */
+.cmp-table{width:100%;border-collapse:separate;border-spacing:0;background:var(--c-card);border-radius:var(--radius);overflow:hidden;border:1px solid var(--c-border);margin:1.5rem 0}
+.cmp-table th{background:rgba(56,189,248,.08);color:var(--c-accent);font-size:.8rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:1rem;text-align:left}
+.cmp-table td{padding:.85rem 1rem;border-bottom:1px solid var(--c-border);font-size:.9rem;transition:background .3s}
+.cmp-table tr:hover td{background:rgba(56,189,248,.04)}
+.cmp-table tr:last-child td{border-bottom:none}
+.badge-good{color:var(--c-green);font-weight:700}
+.badge-warn{color:var(--c-amber);font-weight:700}
+.badge-bad{color:var(--c-red);font-weight:700}
+.badge-best{color:var(--c-accent);font-weight:800}
+
+/* ========== RESULT BARS ========== */
+.bar-chart{display:flex;flex-direction:column;gap:.8rem;margin:1.5rem 0}
+.bar-row{display:flex;align-items:center;gap:1rem}
+.bar-label{min-width:140px;font-size:.85rem;text-align:right;color:var(--c-muted)}
+.bar-track{flex:1;height:28px;background:rgba(255,255,255,.04);border-radius:14px;overflow:hidden;position:relative}
+.bar-fill{height:100%;border-radius:14px;display:flex;align-items:center;padding-left:12px;font-size:.75rem;font-weight:700;color:#fff;transition:width 1.2s cubic-bezier(.22,1,.36,1);width:0}
+.bar-fill.animate{width:var(--w)}
+.bar-value{font-size:.85rem;font-weight:700;min-width:70px}
+
+/* ========== STAT CARDS ========== */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.2rem;margin:2rem 0}
+.stat-card{background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--radius);padding:1.5rem;text-align:center;transition:transform .3s,border-color .3s}
+.stat-card:hover{transform:translateY(-4px);border-color:var(--c-accent)}
+.stat-num{font-size:2.2rem;font-weight:800;line-height:1}
+.stat-label{font-size:.8rem;color:var(--c-muted);margin-top:.4rem}
+
+/* ========== EVOLUTION FLOW ========== */
+.evo-flow{display:flex;align-items:stretch;gap:0;margin:2rem 0;flex-wrap:wrap}
+.evo-step{flex:1;min-width:260px;background:var(--c-card);border:1px solid var(--c-border);padding:1.5rem;position:relative;transition:all .4s}
+.evo-step:first-child{border-radius:var(--radius) 0 0 var(--radius)}
+.evo-step:last-child{border-radius:0 var(--radius) var(--radius) 0}
+.evo-step.active{border-color:var(--c-accent);background:rgba(56,189,248,.06)}
+.evo-arrow{display:flex;align-items:center;justify-content:center;width:40px;font-size:1.5rem;color:var(--c-muted);flex-shrink:0}
+.evo-step h3{font-size:1rem;margin-bottom:.5rem}
+.evo-step ul{list-style:none;font-size:.85rem;color:var(--c-muted)}
+.evo-step ul li{padding:.2rem 0}
+.evo-step ul li::before{content:'→ ';color:var(--c-accent)}
+
+/* ========== CODE BLOCK ========== */
+.code-block{background:#0d1117;border:1px solid var(--c-border);border-radius:var(--radius);padding:1.2rem;margin:1rem 0;font-family:'Cascadia Code','Fira Code',monospace;font-size:.82rem;line-height:1.8;overflow-x:auto;color:#c9d1d9}
+.code-block .kw{color:#ff7b72}
+.code-block .str{color:#a5d6ff}
+.code-block .cm{color:#8b949e}
+.code-block .fn{color:#d2a8ff}
+.code-block .num{color:#79c0ff}
+
+/* ========== GRID LAYOUTS ========== */
+.grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1.5rem}
+.grid-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem}
+
+/* ========== CALLOUT ========== */
+.callout{border-left:4px solid var(--c-accent);background:rgba(56,189,248,.06);border-radius:0 var(--radius) var(--radius) 0;padding:1.2rem 1.5rem;margin:1.5rem 0;font-size:.9rem}
+.callout.warn{border-color:var(--c-amber);background:rgba(251,191,36,.06)}
+.callout.danger{border-color:var(--c-red);background:rgba(248,113,113,.06)}
+.callout.success{border-color:var(--c-green);background:rgba(52,211,153,.06)}
+.callout strong{display:block;margin-bottom:.3rem}
+
+/* ========== TABS ========== */
+.tabs{display:flex;gap:0;margin-bottom:0}
+.tab-btn{padding:.7rem 1.2rem;background:var(--c-card);border:1px solid var(--c-border);border-bottom:none;border-radius:var(--radius) var(--radius) 0 0;cursor:pointer;color:var(--c-muted);font-size:.85rem;font-weight:600;transition:.25s}
+.tab-btn.active{background:var(--c-surface);color:var(--c-accent);border-color:var(--c-accent)}
+.tab-btn:hover:not(.active){color:var(--c-text)}
+.tab-panel{display:none;background:var(--c-surface);border:1px solid var(--c-border);border-radius:0 var(--radius) var(--radius) var(--radius);padding:1.5rem}
+.tab-panel.active{display:block;animation:fadeIn .3s ease-out}
+
+/* ========== FOOTER ========== */
+footer{text-align:center;padding:3rem 2rem;color:var(--c-muted);font-size:.8rem;border-top:1px solid var(--c-border)}
+footer a{color:var(--c-accent)}
+
+/* ========== RESPONSIVE ========== */
+@media(max-width:768px){
+  .tl-item{grid-template-columns:30px 1fr}
+  .tl-item:nth-child(odd) .tl-content,.tl-item:nth-child(even) .tl-content{grid-column:2;text-align:left;padding-left:1rem;padding-right:0}
+  .tl-item:nth-child(odd) .tl-dot,.tl-item:nth-child(even) .tl-dot{grid-column:1}
+  .tl-item .tl-empty{display:none}
+  .evo-flow{flex-direction:column}
+  .evo-step:first-child,.evo-step:last-child{border-radius:var(--radius)}
+  .evo-arrow{transform:rotate(90deg);width:auto;padding:.5rem}
+  nav{gap:.5rem;padding:.6rem 1rem;flex-wrap:wrap}
+  nav a{font-size:.75rem;padding:.3rem .5rem}
+  section{padding:3rem 1rem}
+}
+
+/* ========== SCROLL REVEAL ========== */
+.reveal{opacity:0;transform:translateY(30px);transition:all .7s ease-out}
+.reveal.visible{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <span class="logo">🌊 WL Forecasting</span>
+  <a href="#level1">Level 1: DATN</a>
+  <a href="#level2">Level 2: Paper Gốc</a>
+  <a href="#level3">Level 3: Paper Sửa</a>
+  <a href="#compare">So Sánh</a>
+  <a href="#run">Chạy Thử</a>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <h1>Hành trình từ Đồ án đến Paper Quốc tế</h1>
+  <p class="subtitle">Multi-step Water Level Forecasting — Quảng Hà Estuary<br>Từ ý tưởng DATN → Paper gốc → Paper VNICT2026 sau phản biện</p>
+  <span class="badge">3 Level · Feature Engineering · Surrogate · AdaptiveStack</span>
+  <div class="scroll-hint">↓</div>
+</header>
+
+<!-- ==================== LEVEL 1 ==================== -->
+<section id="level1" class="level level-1">
+  <div class="section-header">
+    <span class="level-badge">Level 1</span>
+    <h2>🎓 Đồ án Tốt nghiệp (DATN) của Sinh viên</h2>
+    <p>Bài toán ban đầu: Dự báo mực nước vùng cửa sông Quảng Hà bằng học máy — một DATN mẫu mực</p>
+  </div>
+
+  <!-- Timeline DATN -->
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-content">
+        <div class="card">
+          <h3>📌 Bước 1: Chọn đề tài</h3>
+          <p>Dự báo mực nước tại khu vực Quảng Hà (Quảng Ninh) sử dụng kỹ thuật học máy. Bài toán multi-step: t+1, t+3, t+7 ngày.</p>
+          <div style="margin-top:.8rem">
+            <span class="tag tag-amber">Thủy văn</span>
+            <span class="tag tag-blue">Machine Learning</span>
+            <span class="tag tag-purple">Multi-step</span>
+          </div>
+        </div>
+      </div>
+      <div class="tl-dot"><span></span></div>
+      <div class="tl-empty"></div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-empty"></div>
+      <div class="tl-dot"><span></span></div>
+      <div class="tl-content">
+        <div class="card">
+          <h3>📊 Bước 2: Thu thập dữ liệu</h3>
+          <p>Dữ liệu từ mô hình thủy động lực <strong>MIKE11</strong>: lưu lượng 2 nhánh sông (Hà Côi, Tài Chi), mực nước biển, mực nước Quảng Hà. 32 năm (1990–2021), daily.</p>
+          <div class="code-block" style="font-size:.75rem">
+<span class="cm">// 4 biến gốc từ MIKE11 simulation</span>
+river_flow_A  <span class="str">[m³/s]</span>  → Nhánh Hà Côi (biên trên 1)
+river_flow_B  <span class="str">[m³/s]</span>  → Nhánh Tài Chi (biên trên 2)
+sea_level     <span class="str">[m]</span>     → Mực nước biển/triều (biên dưới)
+water_level   <span class="str">[m]</span>     → Mực nước Quảng Hà (KẾT QUẢ)
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-content">
+        <div class="card">
+          <h3>🔧 Bước 3: Xây dựng Feature Engineering</h3>
+          <p>Tạo <strong>41 đặc trưng</strong> từ 4 biến gốc, nhóm thành 5 nhóm có ý nghĩa thủy văn. Đây là <strong>đóng góp chính</strong> của DATN.</p>
+          <div style="margin-top:.8rem">
+            <span class="tag tag-amber">Lag (13)</span>
+            <span class="tag tag-blue">Rolling (10)</span>
+            <span class="tag tag-purple">Seasonal (8)</span>
+            <span class="tag tag-green">Interaction (4)</span>
+            <span class="tag tag-pink">Risk (6)</span>
+          </div>
+        </div>
+      </div>
+      <div class="tl-dot"><span></span></div>
+      <div class="tl-empty"></div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-empty"></div>
+      <div class="tl-dot"><span></span></div>
+      <div class="tl-content">
+        <div class="card">
+          <h3>🤖 Bước 4: Huấn luyện mô hình</h3>
+          <p>So sánh: Naive baselines → Linear Regression → Random Forest → XGBoost → Stacking Ensemble. Temporal split: Train 28 năm / Val 2 năm / Test 2 năm.</p>
+          <div class="stats">
+            <div class="stat-card"><div class="stat-num" style="color:var(--c-green)">0.0077</div><div class="stat-label">MAE t+1 (LR) [m]</div></div>
+            <div class="stat-card"><div class="stat-num" style="color:var(--c-green)">0.0086</div><div class="stat-label">MAE t+3 (LR) [m]</div></div>
+            <div class="stat-card"><div class="stat-num" style="color:var(--c-accent)">0.0155</div><div class="stat-label">MAE t+7 (XGB) [m]</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tl-item">
+      <div class="tl-content">
+        <div class="card">
+          <h3>📝 Bước 5: Viết báo cáo & Paper</h3>
+          <p>Viết paper: <em>"Multi-step Water Level Forecasting in the Quang Ha Estuarine Area Using Ensemble ML and Interpretable Feature Analysis"</em>. Nộp hội nghị VNICT2026.</p>
+          <div class="callout warn" style="margin-top:.8rem">
+            <strong>⚠️ Vấn đề lúc này:</strong>
+            • Tiêu đề dẫn đầu bằng "Ensemble ML" nhưng LR tốt hơn ở t+1, t+3<br>
+            • Chưa nói rõ đây là surrogate của MIKE11<br>
+            • R² > 0.998 chưa được giải thích<br>
+            • Naive baseline có bug data leakage
+          </div>
+        </div>
+      </div>
+      <div class="tl-dot"><span></span></div>
+      <div class="tl-empty"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== LEVEL 2 ==================== -->
+<section id="level2" class="level level-2">
+  <div class="section-header">
+    <span class="level-badge">Level 2</span>
+    <h2>📄 Paper Gốc — Bản nộp lần đầu</h2>
+    <p>Paper ban đầu có kết quả tốt nhưng framing chưa chính xác, thiếu caveats, và có một số lỗi kỹ thuật</p>
+  </div>
+
+  <div class="grid-2 reveal">
+    <div>
+      <h3 style="color:var(--c-accent);margin-bottom:1rem">✅ Điểm mạnh của Paper gốc</h3>
+      <div class="card" style="margin-bottom:1rem">
+        <h3>Pipeline hoàn chỉnh</h3>
+        <p>4 bước: Data → Feature Eng. → Models → Evaluation. Temporal split đúng, walk-forward validation.</p>
+      </div>
+      <div class="card" style="margin-bottom:1rem">
+        <h3>Feature Engineering ấn tượng</h3>
+        <p>41 features, 5 nhóm thủy học. Feature importance phân tích theo horizon. Ablation study.</p>
+      </div>
+      <div class="card">
+        <h3>Kết quả số học tốt</h3>
+        <p>MAE 0.0077–0.0155 m. R² > 0.998. Walk-forward MAPE 3.4%–7.2%.</p>
+      </div>
+    </div>
+    <div>
+      <h3 style="color:var(--c-red);margin-bottom:1rem">❌ Vấn đề cần sửa</h3>
+      <div class="card" style="margin-bottom:1rem;border-color:rgba(248,113,113,.3)">
+        <h3>Framing sai lệch</h3>
+        <p>Tiêu đề "Ensemble ML" nhưng LR thắng ở t+1, t+3. Chưa nói rõ là surrogate của MIKE11.</p>
+        <span class="tag tag-red">Reviewer phản bác</span>
+      </div>
+      <div class="card" style="margin-bottom:1rem;border-color:rgba(248,113,113,.3)">
+        <h3>Naive baseline có BUG</h3>
+        <p><code>target.shift(lag)</code> — dùng giá trị tương lai khi h &gt; lag → data leakage!</p>
+        <span class="tag tag-red">Bug nghiêm trọng</span>
+      </div>
+      <div class="card" style="border-color:rgba(248,113,113,.3)">
+        <h3>R² cao thiếu giải thích</h3>
+        <p>R² &gt; 0.998 mà không nói这是因为 dữ liệu MIKE11 mượt hơn thực tế.</p>
+        <span class="tag tag-red">Thiếu caveat</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bugs detail -->
+  <div class="callout danger reveal" style="margin-top:2rem">
+    <strong>🐛 Bug Data Leakage trong Naive Baselines (Comment 7)</strong>
+    <div class="grid-2" style="margin-top:.8rem">
+      <div>
+        <p style="color:var(--c-red);font-weight:700;font-size:.85rem">❌ Bản gốc (SAI):</p>
+        <div class="code-block" style="font-size:.75rem">naive_forecast = target_column.<span class="fn">shift</span>(lag)
+<span class="cm">// Khi h > lag → dùng GIÁ TRỊ TƯƠNG LAI!</span>
+<span class="cm">// → Data leakage → MAE sai lệch</span></div>
+      </div>
+      <div>
+        <p style="color:var(--c-green);font-weight:700;font-size:.85rem">✅ Bản sửa (ĐÚNG):</p>
+        <div class="code-block" style="font-size:.75rem">naive_forecast = water_level_by_date[<span class="fn">date</span> - lag]
+<span class="cm">// Tra cứu theo NGÀY → leak-free</span>
+<span class="cm">// MAE ≈ hằng số across horizons</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Other fixes -->
+  <div class="grid-3 reveal" style="margin-top:2rem">
+    <div class="card">
+      <h3>19.4% → 19.1%</h3>
+      <p>Sai số xuất hiện 4 lần trong paper. Đã sửa từ file kết quả gốc.</p>
+      <span class="tag tag-amber">Sửa số liệu</span>
+    </div>
+    <div class="card">
+      <h3>Significance sai</h3>
+      <p>Claim "significant at t+1" nhưng Wilcoxon p = 0.31 → KHÔNG significant.</p>
+      <span class="tag tag-amber">Sửa thống kê</span>
+    </div>
+    <div class="card">
+      <h3>SHAP contradiction</h3>
+      <p>Text nói "not SHAP" nhưng figure là SHAP plot. Đã sửa cho一致.</p>
+      <span class="tag tag-amber">Sửa text/figure</span>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== LEVEL 3 ==================== -->
+<section id="level3" class="level level-3">
+  <div class="section-header">
+    <span class="level-badge">Level 3</span>
+    <h2>✨ Paper sau Phản biện — Rõ ràng, Trung thực, Mạnh mẽ hơn</h2>
+    <p>6 thay đổi cấu trúc, 10 lỗi sửa — Paper trở nên trung thực và khoa học hơn rất nhiều</p>
+  </div>
+
+  <!-- 6 Structural Changes -->
+  <h3 style="color:var(--c-green);margin-bottom:1.5rem;font-size:1.2rem">6 Thay đổi Cấu trúc chính</h3>
+
+  <div class="evo-flow reveal">
+    <div class="evo-step" id="evo1">
+      <h3 style="color:var(--c-amber)">1</h3>
+      <h3>Đổi Tiêu đề</h3>
+      <ul>
+        <li>Trước: "Ensemble ML"</li>
+        <li>Sau: "Feature-Engineering-Driven ML as Surrogate"</li>
+        <li>Phản ánh đúng đóng góp chính</li>
+      </ul>
+    </div>
+    <div class="evo-arrow">→</div>
+    <div class="evo-step" id="evo2">
+      <h3 style="color:var(--c-accent)">2</h3>
+      <h3>Surrogate Framing</h3>
+      <ul>
+        <li>Trước: chỉ trong Limitations</li>
+        <li>Sau: Abstract + Intro + Discussion</li>
+        <li>Trung thực về scope ngay từ đầu</li>
+      </ul>
+    </div>
+    <div class="evo-arrow">→</div>
+    <div class="evo-step" id="evo3">
+      <h3 style="color:var(--c-green)">3</h3>
+      <h3>Noise Experiment</h3>
+      <ul>
+        <li>Trước: KHÔNG CÓ</li>
+        <li>Sau: Section IV-G, Table IV</li>
+        <li>Định lượng simulator→field gap</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="evo-flow reveal" style="margin-top:0">
+    <div class="evo-step" id="evo4">
+      <h3 style="color:var(--c-pink)">4</h3>
+      <h3>Risk-zone Rebuild</h3>
+      <ul>
+        <li>Trước: chỉ accuracy</li>
+        <li>Sau: +Wilson CI, prec/recall/F1</li>
+        <li>+per-zone MAE, sample counts</li>
+      </ul>
+    </div>
+    <div class="evo-arrow">→</div>
+    <div class="evo-step" id="evo5">
+      <h3 style="color:var(--c-accent2)">5</h3>
+      <h3>Reframe Contribution</h3>
+      <ul>
+        <li>Trước: ensemble là chính</li>
+        <li>Sau: feature engineering là chính</li>
+        <li>LR tốt hơn ensemble ở t+1, t+3</li>
+      </ul>
+    </div>
+    <div class="evo-arrow">→</div>
+    <div class="evo-step" id="evo6">
+      <h3 style="color:var(--c-orange)">6</h3>
+      <h3>Đối chiếu 126 số liệu</h3>
+      <ul>
+        <li>106 khớp ngay</li>
+        <li>20 lỗi đã sửa</li>
+        <li>2 tồn nhỏ đã giải thích</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Noise Experiment Result -->
+  <h3 style="color:var(--c-green);margin:2.5rem 0 1rem;font-size:1.2rem">📡 Noise Experiment — Đo khoảng cách Simulator → Field</h3>
+  <div class="callout success reveal">
+    <strong>Thí nghiệm mới (Section IV-G): Thêm Gaussian noise vào input</strong>
+    Khi thêm noise σ = 1cm vào water_level &amp; sea_level → MAE Stacking t+1 tăng 40% (0.0105 → 0.0147 m). Ở t+3, Linear Regression COLLAPSE (0.009 → 0.329 m tại σ=5cm) trong khi XGBoost degrade từ từ → ranking THAY ĐỔI: ensemble vượt linear khi có noise.
+  </div>
+
+  <div class="bar-chart reveal">
+    <div style="text-align:center;color:var(--c-muted);font-size:.85rem;margin-bottom:.5rem">MAE t+1 (m) theo noise σ — Scenario S1 (train clean → test noisy)</div>
+    <div class="bar-row">
+      <span class="bar-label">LR σ=0</span>
+      <div class="bar-track"><div class="bar-fill" style="--w:4%;background:linear-gradient(90deg,var(--c-green),var(--c-accent))" data-bar></div></div>
+      <span class="bar-value badge-good">0.008</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label">XGB σ=0</span>
+      <div class="bar-track"><div class="bar-fill" style="--w:6%;background:linear-gradient(90deg,var(--c-accent2),var(--c-accent))" data-bar></div></div>
+      <span class="bar-value">0.011</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label">Stack σ=1cm</span>
+      <div class="bar-track"><div class="bar-fill" style="--w:8%;background:linear-gradient(90deg,var(--c-amber),var(--c-orange))" data-bar></div></div>
+      <span class="bar-value badge-warn">0.015</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label">XGB σ=2cm</span>
+      <div class="bar-track"><div class="bar-fill" style="--w:22%;background:linear-gradient(90deg,var(--c-orange),var(--c-red))" data-bar></div></div>
+      <span class="bar-value badge-warn">0.039</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label">LR σ=2cm</span>
+      <div class="bar-track"><div class="bar-fill" style="--w:29%;background:linear-gradient(90deg,var(--c-red),var(--c-pink))" data-bar></div></div>
+      <span class="bar-value badge-bad">0.051</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label">LR σ=5cm t+3</span>
+      <div class="bar-track"><div class="bar-fill" style="--w:92%;background:linear-gradient(90deg,var(--c-red),#dc2626)" data-bar></div></div>
+      <span class="bar-value badge-bad">0.329 💥</span>
+    </div>
+  </div>
+
+  <!-- R² explanation -->
+  <div class="grid-2 reveal" style="margin-top:2rem">
+    <div class="card">
+      <h3 style="color:var(--c-amber)">Tại sao R² &gt; 0.998?</h3>
+      <p>Dữ liệu MIKE11 tuân theo phương trình Saint-Venant → dynamics mượt, ít noise. R² cao là <strong>tính chất của dữ liệu</strong>, không phải model giỏi.</p>
+      <div class="code-block" style="font-size:.75rem;margin-top:.8rem">
+<span class="cm">// Saint-Venant 1D (MIKE11 giải)</span>
+∂A/∂t + ∂Q/∂x = q         <span class="cm">// continuity</span>
+∂Q/∂t + ∂(Q²/A)/∂x + gA·∂h/∂x = -gA·Sf  <span class="cm">// momentum</span>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="color:var(--c-green)">Validation Roadmap (3 bước)</h3>
+      <div style="margin-top:.8rem">
+        <div style="display:flex;align-items:center;gap:.8rem;margin-bottom:.8rem">
+          <span style="background:var(--c-accent);color:#000;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;flex-shrink:0">1</span>
+          <span style="font-size:.9rem">Lấy data đo thực từ MIKE11 calibration record</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:.8rem;margin-bottom:.8rem">
+          <span style="background:var(--c-accent);color:#000;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;flex-shrink:0">2</span>
+          <span style="font-size:.9rem">Tách lỗi mô phỏng vs lỗi mô hình</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:.8rem">
+          <span style="background:var(--c-accent);color:#000;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;flex-shrink:0">3</span>
+          <span style="font-size:.9rem">Mở rộng nhiều trạm + compound events</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== COMPARISON ==================== -->
+<section id="compare">
+  <div class="section-header">
+    <h2>📋 So sánh 3 Level — Trước và Sau</h2>
+    <p>Nhìn lại sự tiến hóa từ DATN → Paper gốc → Paper sửa</p>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs reveal">
+    <button class="tab-btn active" data-tab="tab-title">Tiêu đề & Framing</button>
+    <button class="tab-btn" data-tab="tab-results">Kết quả</button>
+    <button class="tab-btn" data-tab="tab-eval">Đánh giá</button>
+    <button class="tab-btn" data-tab="tab-refs">Tài liệu tham khảo</button>
+  </div>
+
+  <div id="tab-title" class="tab-panel active reveal">
+    <table class="cmp-table">
+      <tr><th style="width:25%">Khía cạnh</th><th style="width:25%">DATN (SV)</th><th style="width:25%">Paper Gốc</th><th style="width:25%">Paper Sửa</th></tr>
+      <tr><td><strong>Tiêu đề</strong></td><td>Đồ án tốt nghiệp</td><td><span class="badge-warn">"Ensemble ML and Interpretable Feature Analysis"</span></td><td><span class="badge-good">"Feature-Engineering-Driven ML as Surrogate"</span></td></tr>
+      <tr><td><strong>Framing</strong></td><td>ML dự báo mực nước</td><td><span class="badge-warn">ML là forecasting model</span></td><td><span class="badge-good">ML là surrogate của MIKE11</span></td></tr>
+      <tr><td><strong>Đóng góp chính</strong></td><td>So sánh models</td><td><span class="badge-warn">Ensemble advantages</span></td><td><span class="badge-good">Feature engineering</span></td></tr>
+      <tr><td><strong>Giới hạn</strong></td><td>Ít được nêu</td><td><span class="badge-warn">Chỉ cuối paper</span></td><td><span class="badge-good">Mọi section + roadmap</span></td></tr>
+    </table>
+  </div>
+
+  <div id="tab-results" class="tab-panel reveal">
+    <table class="cmp-table">
+      <tr><th style="width:25%">Metric</th><th style="width:25%">DATN (SV)</th><th style="width:25%">Paper Gốc</th><th style="width:25%">Paper Sửa</th></tr>
+      <tr><td><strong>MAE t+1</strong></td><td>~0.008 m</td><td>0.0078 m</td><td><span class="badge-good">0.0077 m (chính xác)</span></td></tr>
+      <tr><td><strong>R²</strong></td><td>~0.999</td><td><span class="badge-warn">R² &gt; 0.998 (đơn lẻ)</span></td><td><span class="badge-good">R² dải 0.9984–0.9996</span></td></tr>
+      <tr><td><strong>AdaptiveStack</strong></td><td>Chưa có</td><td><span class="badge-warn">19.4% improvement</span></td><td><span class="badge-good">19.1% (chính xác)</span></td></tr>
+      <tr><td><strong>Noise experiment</strong></td><td>Không có</td><td><span class="badge-bad">Không có</span></td><td><span class="badge-good">Section IV-G + Table IV</span></td></tr>
+      <tr><td><strong>Naive baselines</strong></td><td>Đơn giản</td><td><span class="badge-bad">BUG data leakage</span></td><td><span class="badge-good">Leak-free, đã sửa</span></td></tr>
+    </table>
+  </div>
+
+  <div id="tab-eval" class="tab-panel reveal">
+    <table class="cmp-table">
+      <tr><th style="width:25%">Đánh giá</th><th style="width:25%">DATN (SV)</th><th style="width:25%">Paper Gốc</th><th style="width:25%">Paper Sửa</th></tr>
+      <tr><td><strong>Risk-zone</strong></td><td>Accuracy đơn giản</td><td><span class="badge-warn">Chỉ accuracy</span></td><td><span class="badge-good">+Wilson CI, prec/recall/F1, per-zone MAE</span></td></tr>
+      <tr><td><strong>Imbalance</strong></td><td>Chưa nêu rõ</td><td><span class="badge-warn">"Cautious interpretation"</span></td><td><span class="badge-good">684/29/9 + Wilson [0.35, 0.88]</span></td></tr>
+      <tr><td><strong>Statistical test</strong></td><td>Không có</td><td><span class="badge-bad">"Significant at t+1" (sai)</span></td><td><span class="badge-good">p=0.31 → NOT significant</span></td></tr>
+      <tr><td><strong>Bias Exceedance</strong></td><td>Chưa phân tích</td><td><span class="badge-bad">Không báo cáo</span></td><td><span class="badge-good">-0.005 to -0.026 m (under-predict)</span></td></tr>
+    </table>
+  </div>
+
+  <div id="tab-refs" class="tab-panel reveal">
+    <table class="cmp-table">
+      <tr><th style="width:30%">Reference</th><th style="width:35%">Paper Gốc</th><th style="width:35%">Paper Sửa</th></tr>
+      <tr><td><strong>[6] Le et al.</strong></td><td><span class="badge-bad">Sai paper</span></td><td><span class="badge-good">Đúng: Hai Duong sluice-gate study</span></td></tr>
+      <tr><td><strong>[8] First author</strong></td><td><span class="badge-bad">Sai tên tác giả</span></td><td><span class="badge-good">Đúng: Xiong</span></td></tr>
+      <tr><td><strong>Feature ablation</strong></td><td>Có figure</td><td><span class="badge-good">Bỏ figure → báo cáo số trong text (tiết kiệm chỗ)</span></td></tr>
+      <tr><td><strong>Model tables</strong></td><td>2 bảng riêng</td><td><span class="badge-good">Gộp Table I (tiết kiệm cho noise experiment)</span></td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ==================== RUN ==================== -->
+<section id="run">
+  <div class="section-header">
+    <h2>🚀 Chạy thử Repo trên máy</h2>
+    <p>Sinh viên có thể clone repo và chạy pipeline trong vài phút</p>
+  </div>
+
+  <div class="code-block reveal" style="font-size:.85rem">
+<span class="cm"># 1. Clone repo</span>
+<span class="kw">git clone</span> https://github.com/hieutachi/water-level-forecasting-student.git
+<span class="kw">cd</span> water-level-forecasting-student
+
+<span class="cm"># 2. Tạo môi trường & cài đặt</span>
+<span class="kw">python</span> -m venv venv
+<span class="kw">venv\Scripts\activate</span>          <span class="cm"># Windows</span>
+<span class="kw">pip install</span> -r requirements.txt
+
+<span class="cm"># 3. Tạo dữ liệu mẫu (MIKE11-like)</span>
+<span class="kw">python</span> scripts/generate_data.py
+
+<span class="cm"># 4. Mở notebook theo thứ tự</span>
+<span class="kw">jupyter notebook</span>
+<span class="cm"># → 01_exploratory_data_analysis.ipynb</span>
+<span class="cm"># → 02_feature_engineering_demo.ipynb</span>
+<span class="cm"># → 03_model_comparison.ipynb      ← pipeline chính</span>
+<span class="cm"># → 04_risk_zone_and_shap.ipynb</span>
+
+<span class="cm"># 5. Chạy test (kiểm tra code)</span>
+<span class="kw">python</span> -m pytest tests/ -v    <span class="cm"># 21/21 tests passed ✓</span>
+  </div>
+
+  <div class="stats reveal">
+    <div class="stat-card"><div class="stat-num" style="color:var(--c-accent)">42</div><div class="stat-label">Files trong repo</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--c-green)">21</div><div class="stat-label">Unit tests passed</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--c-accent2)">4</div><div class="stat-label">Jupyter notebooks</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--c-amber)">6</div><div class="stat-label">Docs learning files</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--c-pink)">12</div><div class="stat-label">Slides (Marp)</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--c-orange)">16K+</div><div class="stat-label">Lines of code + docs</div></div>
+  </div>
+</section>
+
+<!-- ==================== LESSONS ==================== -->
+<section>
+  <div class="section-header">
+    <h2>💡 Bài học rút ra cho Sinh viên</h2>
+    <p>6 bài học từ hành trình DATN → Paper quốc tế</p>
+  </div>
+
+  <div class="grid-3 reveal">
+    <div class="card" style="border-top:3px solid var(--c-amber)">
+      <h3 style="color:var(--c-amber)">1. Feature Engineering &gt; Model</h3>
+      <p>Linear Regression thắng ensemble ở t+1, t+3. Đầu tư feature engineering hiệu quả hơn tìm model phức tạp.</p>
+    </div>
+    <div class="card" style="border-top:3px solid var(--c-accent)">
+      <h3 style="color:var(--c-accent)">2. Temporal Split — NEVER Random</h3>
+      <p>Dữ liệu thời gian phải chia theo thời gian. Random split gây data leakage → kết quả quá lạc quan.</p>
+    </div>
+    <div class="card" style="border-top:3px solid var(--c-green)">
+      <h3 style="color:var(--c-green)">3. Surrogate Framing — Honest Scope</h3>
+      <p>Phải trung thực về mô hình học cái gì. ML học từ simulator ≠ dự báo thực địa.</p>
+    </div>
+    <div class="card" style="border-top:3px solid var(--c-accent2)">
+      <h3 style="color:var(--c-accent2)">4. R² cao cần Context</h3>
+      <p>R² &gt; 0.998 là do dữ liệu mượt (MIKE11), không phải model giỏi. Always report alongside MAPE.</p>
+    </div>
+    <div class="card" style="border-top:3px solid var(--c-pink)">
+      <h3 style="color:var(--c-pink)">5. Imbalance = Wilson CI + Counts</h3>
+      <p>9/722 Exceedance → Wilson CI [0.35, 0.88] quá rộng. Luôn báo sample counts cho minority class.</p>
+    </div>
+    <div class="card" style="border-top:3px solid var(--c-orange)">
+      <h3 style="color:var(--c-orange)">6. Đọc Reviewer Response</h3>
+      <p>Thư trả lời reviewer là tài liệu quý giá nhất. Học cách phản biện, cải thiện, và viết khoa học.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p><strong>Water Level Forecasting — Quang Ha Estuary</strong></p>
+  <p>Dựa trên 2 paper VNICT2026 + Thư trả lời Reviewer | <a href="https://github.com/hieutachi/water-level-forecasting-student" target="_blank">GitHub Repo</a></p>
+  <p style="margin-top:.5rem">Thuyloi University · Faculty of Information Technology · 2026</p>
+</footer>
+
+<script>
+// ========== SCROLL REVEAL ==========
+const revealEls = document.querySelectorAll('.reveal');
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+}, { threshold: 0.15 });
+revealEls.forEach(el => revealObserver.observe(el));
+
+// ========== TIMELINE ANIMATION ==========
+const tlContents = document.querySelectorAll('.tl-content');
+const tlObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.2 });
+tlContents.forEach(el => tlObserver.observe(el));
+
+// ========== BAR CHART ANIMATION ==========
+const bars = document.querySelectorAll('[data-bar]');
+const barObserver = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('animate'); });
+}, { threshold: 0.3 });
+bars.forEach(el => barObserver.observe(el));
+
+// ========== TABS ==========
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(tab).classList.add('active');
+  });
+});
+
+// ========== NAV ACTIVE STATE ==========
+const navLinks = document.querySelectorAll('nav a');
+const sections = document.querySelectorAll('section[id]');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 200) current = s.id; });
+  navLinks.forEach(a => {
+    a.classList.remove('active');
+    if (a.getAttribute('href') === '#' + current) a.classList.add('active');
+  });
+});
+
+// ========== EVO STEPS HOVER ==========
+document.querySelectorAll('.evo-step').forEach(step => {
+  step.addEventListener('mouseenter', () => step.classList.add('active'));
+  step.addEventListener('mouseleave', () => step.classList.remove('active'));
+});
+</script>
+</body>
+</html>

@@ -41,6 +41,7 @@ conda-env/
 output/
 *.png
 *.html
+!index.html
 !docs/**
 
 # Logs
