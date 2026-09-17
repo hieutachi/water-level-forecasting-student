@@ -1,17 +1,26 @@
-# Multi-step Water Level Forecasting — Student Repository
+# Multi-step Water Level Forecasting — Từ DATN đến Paper Quốc tế
 
-Repo học tập và trình bày mẫu về bài toán **dự báo mực nước đa bước** tại vùng cửa sông Quảng Hà, dựa trên 2 paper VNICT2026.
+Repo học tập về hành trình **3 bước** từ Đồ án Tốt nghiệp đến Paper VNICT2026: dự báo mực nước đa bước tại cửa sông Quảng Hà bằng học máy.
+
+## Hành trình 3 bước
+
+| Level | Nội dung | Trạng thái |
+|-------|----------|------------|
+| **Level 1: DATN** | Sinh viên Nguyễn Thị Thảo xây dựng pipeline đầy đủ: data → 41 features → RF/XGB/Stacking → AdaptiveStack → demo website | ✅ Hoàn thành |
+| **Level 2: Paper Gốc** | Giảng viên phát triển DATN thành paper 6 trang, thêm walk-forward, SHAP, nộp VNICT2026 | ✅ Đã nộp |
+| **Level 3: Paper Sửa** | Sau 7 comments reviewer: đổi tiêu đề, surrogate framing, noise experiment, rebuild risk-zone, sửa 10 lỗi | ✅ Đã sửa |
+
+📖 **Xem chi tiết tại trang HTML:** [GitHub Pages](https://hieutachi.github.io/water-level-forecasting-student/)
 
 ## Mô tả
 
-Repository này phục vụ sinh viên năm 3–4 ngành CNTT/HTTT/Kỹ thuật muốn hiểu:
-
+Repository phục vụ sinh viên muốn hiểu:
 - Cách xây dựng pipeline dự báo mực nước từ dữ liệu thủy văn
-- Tầm quan trọng của **feature engineering** (đôi khi quan trọng hơn model phức tạp)
+- Tầm quan trọng của **feature engineering** (LR thắng ensemble ở t+1, t+3)
 - Cách đánh giá mô hình đúng cách: temporal split, walk-forward, risk-zone
-- Cách đọc và viết paper khoa học
+- Cách phản biện và cải thiện paper khoa học (đọc thư trả lời reviewer)
 
-**Lưu ý quan trọng:** Dữ liệu trong repo là **output mô phỏng MIKE11** (không phải đo thực). Mô hình ML đóng vai trò "surrogate" — phần thay thế nhanh cho trình mô phỏng, KHÔNG phải hệ thống dự báo thực địa đã validated.
+**Lưu ý:** Dữ liệu là **output mô phỏng MIKE11** (không phải đo thực). Mô hình ML là "surrogate" — phần thay thế nhanh cho trình mô phỏng, KHÔNG phải hệ thống dự báo thực địa đã validated.
 
 ## Yêu cầu hệ thống
 
